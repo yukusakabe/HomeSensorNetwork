@@ -151,7 +151,7 @@ int RCS620S::cardCommand(const uint8_t* command,
     
     ret = rwCommand(buf, 5 + commandLen, buf, &len);
     if (!ret || (len < 4) ||
-        (buf[0] != 0xd5) || (buf[1] != 0xa1) || (buf[2] != 0x00) ||
+        (memcmp(buf, "\xd5\xa1\x00", 3) != 0) ||
         (len != (3 + buf[3]))) {
         return 0;
     }
@@ -164,8 +164,7 @@ int RCS620S::cardCommand(const uint8_t* command,
 
 int RCS620S::cardDataExchange(const uint8_t* command,
                               uint8_t commandLen,
-                              uint8_t response[RCS620S_MAX_CARD_RESPONSE_LEN],
-                              uint8_t* responseLen)
+                              uint8_t response[RCS620S_MAX_CARD_RESPONSE_LEN])
 {
     int ret;
     uint16_t commandTimeout;
@@ -179,11 +178,11 @@ int RCS620S::cardDataExchange(const uint8_t* command,
     memcpy(buf + 3, command, commandLen);
     
     ret = rwCommand(buf, 3 + commandLen, buf, &len);
-    if (!ret || (buf[0] != 0xd5) || (buf[1] != 0x41) || (buf[2] != 0x00)) {
+    if (!ret ||
+        (memcmp(buf, "\xd5\x41\x00", 3) != 0)) {
         return 0;
     }
-    
-    //*responseLen = (uint8_t)(buf[3] - 1);
+
     memcpy(response, buf + 3, 4);
     
     return 1;

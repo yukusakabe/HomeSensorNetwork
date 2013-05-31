@@ -10,39 +10,52 @@
 #ifndef ____libSTP__
 #define ____libSTP__
 
-#define BROADCAST_ADDR          0xFF    //Broadcast Address
+#define SBYT                    uint8_t
+#define DBYT                    uint16_t
+#define QBYT                    uint32_t
+#define OBYT                    uint64_t
 
-#define PACKET_MAX_LEN          32      //Max 256
-#define CHAR_DELAY_TIME         300     //us
-#define PACKET_DELAY_TIME       10000   //us
-#define SEND_TIMEOUT            10000   //us
-#define RECV_TIMEOUT            12000   //us
+#define BROADCAST_ADDR          0xFF    //Broadcast Address
+#define PACKET_MAX_LEN          32      //
+#define CRC_CCITT16             0x1021  //CRC G(x)=X16+X12+X5+1=0x(1)1021
+#define RESPNSE_TIMEOUT         500000
 
 class SoftwareSerial;
 class STP
 {
 public:
-    STP(SoftwareSerial *softSerial = NULL);
-    
-    void initSTP(uint8_t dipval);
-    int sendPacket(uint8_t sendaddr,
-                   const uint8_t *data,
-                   uint8_t len);
-    int recvPacket(uint8_t *fromaddr,
-                   uint8_t *data,
-                   uint8_t *len);
-
+    STP(DBYT rate,
+        DBYT addr);
+    STP(SoftwareSerial *softSerial,
+        DBYT rate,
+        DBYT addr);
+    SBYT sendPacket(SBYT sendaddr,
+                    SBYT command,
+                    SBYT *data,
+                    SBYT len);
+    SBYT recvPacket(SBYT *fromaddr,
+                    SBYT *command,
+                    SBYT *data,
+                    SBYT *len);
+    DBYT calcCRC16(SBYT *data,
+                   DBYT length);
 private:
-    void writeSerial(const uint8_t *data,
-                     uint16_t len);
-    int readSerial();
-    int availableSerial();
+    void writeSerial(SBYT *data,
+                     DBYT len);
+    SBYT readSerial();
+    SBYT availableSerial();
     void flushSerial();
-    int checkTimeout(unsigned long t0,
-                     unsigned long timeout);
+    QBYT usec();
+    void delayu(QBYT time);
+    SBYT checkTimeout(QBYT t0,
+                      QBYT timeout);
+    
 
 public:
-    uint8_t myaddr;
+    DBYT bitrate;
+    DBYT delaytime;
+    QBYT timeout;
+    SBYT myaddr;
     
 private:
     SoftwareSerial *serialPort;

@@ -1,12 +1,13 @@
+#include <SoftwareSerial.h>
 #include <LiquidCrystal.h>
-#include <RCS620S_KAI.h>
+#include <libRCS620S.h>
  
 #define COMMAND_TIMEOUT 400
 #define POLLING_INTERVAL 1000
 #define LED_PIN 13
  
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
-RCS620S rcs620s;
+RCS620S rcs620s(NULL);
  
 void setup() { 
   int ret;
@@ -47,7 +48,7 @@ void loop() {
   }*/
   
   //ret = rcs620s.cardDataExchange((const uint8_t*)"\xa2\x06\x01\x02\x03\x04", 6, response, &responselen);
-  ret = rcs620s.cardDataExchange((const uint8_t*)"\x30\x06", 2, response, &responselen);
+  ret = rcs620s.cardDataExchange((const uint8_t*)"\x30\x06", 2, response);
 
   if(ret) {
     lcd.print("Response:");

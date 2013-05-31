@@ -36,8 +36,7 @@ public:
                     uint8_t* responseLen);
     int cardDataExchange(const uint8_t* command,
                          uint8_t commandLen,
-                         uint8_t response[RCS620S_MAX_CARD_RESPONSE_LEN],
-                         uint8_t* responseLen);
+                         uint8_t response[RCS620S_MAX_CARD_RESPONSE_LEN]);
     int rfOff(void);
     int push(const uint8_t* data,
              uint8_t dataLen);
