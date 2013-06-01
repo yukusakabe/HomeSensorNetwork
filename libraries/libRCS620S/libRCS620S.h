@@ -6,7 +6,7 @@
 
 #include <inttypes.h>
 
-#ifndef RCS620S_H_
+#ifndef libRCS620S_H_
 #define libRCS620S_H_
 
 /* --------------------------------

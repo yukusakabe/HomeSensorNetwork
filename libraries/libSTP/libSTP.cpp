@@ -10,7 +10,6 @@
 #include <string.h>
 #include <inttypes.h>
 #include "Arduino.h"
-#include "Print.h"
 #include "HardwareSerial.h"
 #include "SoftwareSerial.h"
 
@@ -26,7 +25,7 @@ STP::STP(DBYT rate,
     this->serialPort = NULL;
     this->bitrate = rate;
     this->delaytime = (1000000 / (this->bitrate / 8)) * 1.2;
-    this->timeout = this->delaytime * (PACKET_MAX_LEN + 8) * 3;
+    this->timeout = this->delaytime * (PACKET_MAX_LEN) * 2;
 }
 
 STP::STP(SoftwareSerial *softSerial,
@@ -36,31 +35,27 @@ STP::STP(SoftwareSerial *softSerial,
     this->serialPort = softSerial;
     this->bitrate = rate;
     this->delaytime = (1000000 / (this->bitrate / 8)) * 1.2;
-    this->timeout = this->delaytime * (PACKET_MAX_LEN + 8) * 3;
+    this->timeout = this->delaytime * (PACKET_MAX_LEN) * 2;
 }
 
 SBYT STP::sendPacket(SBYT sendaddr,
-                     SBYT command,
                      SBYT *data,
                      SBYT len)
 {
+    SBYT buf[PACKET_MAX_LEN];
     SBYT i;
-    DBYT crc;
     QBYT t0;
-    
-    SBYT buf[PACKET_MAX_LEN + 8];
+
     buf[0] = sendaddr;
     buf[1] = myaddr;
-    buf[2] = command;
-    crc = calcCRC16(buf, 3);
-    memcpy(buf + 3, &crc, 2);
-    buf[5] = len;
-    memcpy(buf + 6, data, len);
-    crc = calcCRC16(buf + 5, len + 1);
-    memcpy(buf + 6 + len, &crc, 2);
+    buf[2] = len + 4;
+    buf[3] = calcCRC8(buf, 3);
+    
+    if (len != 0) {
+        memcpy(buf + 4, data, len);
+    }
     
     t0 = usec();
-    
     while (1) {
         if (checkTimeout(t0, this->timeout)) {
             return 1;
@@ -69,25 +64,23 @@ SBYT STP::sendPacket(SBYT sendaddr,
         i = availableSerial();
         delayu(delaytime);
         if (availableSerial() > i) {
-            delayu(random(this->delaytime * 8, this->delaytime * 16));
+            delayu(random(this->delaytime * 4, this->delaytime * 16));
         } else {
             break;
         }
     }
     
-    writeSerial(buf, len + 8);
+    writeSerial(buf, len + 4);
     
     return 0;
 }
 
 SBYT STP::recvPacket(SBYT *fromaddr,
-                     SBYT *command,
                      SBYT *data,
                      SBYT *len)
 {
+    SBYT buf[PACKET_MAX_LEN];
     SBYT i = 0;
-    DBYT crc;
-    SBYT buf[PACKET_MAX_LEN + 8];
     QBYT t0;
     
     if (availableSerial() == 0) {
@@ -95,8 +88,8 @@ SBYT STP::recvPacket(SBYT *fromaddr,
     }
     
     t0 = usec();
-    while (i <= 5) {
-        if (checkTimeout(t0, this->delaytime * 8)) {
+    while (i < 4) {
+        if (checkTimeout(t0, this->delaytime * HEDDER_LEN * 2)) {
             flushSerial();
             return 1;
         }
@@ -109,19 +102,18 @@ SBYT STP::recvPacket(SBYT *fromaddr,
         }
     }
     
-    crc = calcCRC16(buf, 3);
-    if (memcmp(buf + 3, &crc, 2) != 0) {
+    if (calcCRC8(buf, 3) != buf[3]) {
         flushSerial();
         return 1;
     }
-    
-    t0 = usec();
-    while (i < 6 + buf[5] + 2) {
-        if (checkTimeout(t0, this->timeout)) {
-            flushSerial();
-            return 2;
-        }
 
+    t0 = usec();
+    while (i < buf[2]) {
+        if (checkTimeout(t0, this->delaytime * (buf[2] - 4) * 2)) {
+            flushSerial();
+            return 1;
+        }
+        
         if (availableSerial() > 0) {
             buf[i] = readSerial();
             i++;
@@ -130,36 +122,29 @@ SBYT STP::recvPacket(SBYT *fromaddr,
         }
     }
     
-    crc = calcCRC16(buf + 5, buf[5] + 1);
-    if (memcmp(buf + 6 + buf[5], &crc, 2) != 0) {
-        flushSerial();
-        return 2;
+    if (buf[0] == myaddr || buf[0] == BROADCAST_ADDR) {
+        *fromaddr = buf[1];
+        *len = buf[2];
+        memcpy(data, buf + 4, buf[2] - 4);
+        
+        return 0;
     }
     
-    if (buf[0] != myaddr && buf[0] != BROADCAST_ADDR) {
-        return 1;
-    }
-    
-    *fromaddr = buf[1];
-    *command = buf[2];
-    *len = buf[5];
-    memcpy(data, buf + 6, buf[5]);
-    
-    return 0;
+    return 1;
 }
 
-DBYT STP::calcCRC16(SBYT *data,
-                    DBYT len)
+SBYT STP::calcCRC8(SBYT *data,
+                   DBYT len)
 {
-    SBYT i, j, buf;
-    DBYT crc = 0xFFFF;
+    SBYT i, j;
+    SBYT crc = 0xFF;
     
     for (i = 0; i < len; i++) {
-        crc ^= (DBYT)(data[i] << 8);
+        crc ^= data[i];
         for (j = 0; j < 8; j++) {
-            if (crc & 0x8000) {
+            if (crc & 0x80) {
                 crc <<= 1;
-                crc ^= CRC_CCITT16;
+                crc ^= CRC_8_CCITT;
             } else {
                 crc <<= 1;
             }

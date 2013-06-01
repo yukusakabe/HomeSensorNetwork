@@ -19,139 +19,69 @@
  * public
  * ------------------------ */
 
-cardKeyEEPROM::cardKeyEEPROM()
+libEEPROM::libEEPROM(DBYT size) {
+    this->romsize = size;
+}
+
+void libEEPROM::readBlock(DBYT block,
+                          SBYT *data)
 {
-    uint16_t i = 0;
+    SBYT i = 0;
     
-    while (i < EEPROM_SIZE / 2) {
-        rombuf[i] = readByte(i);
+    while (i < BLOCK_SIZE) {
+        data[i] = readByte(resBlockAddr(block) + i);
         i++;
     }
 }
 
-void cardKeyEEPROM::initcardKeyEEPROM()
+void libEEPROM::writeBlock(DBYT block,
+                           SBYT *data)
 {
-    uint16_t i = 0;
+    SBYT i = 0;
     
-    while (i < EEPROM_SIZE) {
+    while (i < BLOCK_SIZE) {
+        if (readByte(resBlockAddr(block) + i) != data[i]) {
+            writeByte(resBlockAddr(block) + i , data[i]);
+        }
+        i++;
+    }
+}
+
+void libEEPROM::clearEEPROM()
+{
+    SBYT i = 0;
+    
+    while (i < this->romsize) {
         writeByte(i, 0x00);
-        rombuf[i] = 0x00;
         i++;
     }
 }
 
-uint16_t cardKeyEEPROM::searchID(uint8_t *cid,
-                                 uint8_t len)
+void libEEPROM::clearBlock(DBYT block)
 {
-    uint16_t i = 4;
-    uint8_t buf[32] = {};
+    SBYT i = 0;
     
-    while (i < (EEPROM_SIZE / BLOCK_SIZE / 2)) {
-        readBlock(i, buf);
-        
-        if (memcmp(buf, cid, len) == 0) {
-            return i;
-        }
-        
-        i++;
+    while (i < BLOCK_SIZE) {
+        writeByte(resBlockAddr(block) + i, 0x00);
     }
-    
-    return 0;
 }
-
-int cardKeyEEPROM::saveID(uint8_t *cid,
-                          uint8_t len,
-                          uint8_t *scode)
-{
-    uint16_t i;
-    uint8_t buf[32] = {};
-    
-    i = searchID(cid, len);
-    
-    if (i != 0) {
-        readBlock(i, buf);
-        memcpy(buf, cid, len);
-        memcpy(buf + 12, scode, 4);
-        
-        writeBlock(i, buf);
-    } else {
-        if (rombuf[0] >= EEPROM_SIZE / BLOCK_SIZE / 2 - 4) {
-            return 1;
-        } else {
-            memcpy(buf, cid, len);
-            memcpy(buf + 12, scode, 4);
-            
-            writeBlock(rombuf[0] + 4, buf);
-            incNoCard();
-        }
-    }
-    
-    return 0;
-}
-
-int cardKeyEEPROM::loadID(uint8_t *cid,
-                          uint8_t len,
-                          uint8_t *scode)
-{
-    uint16_t i;
-    uint8_t buf[32] = {};
-    
-    i = searchID(cid, len);
-    
-    if (i == 0) {
-        return 1;
-    } else {
-        readBlock(i, buf);
-        memcpy(scode, buf + 12, 4);
-    }
-    
-    return 0;
-}
-
 
 /* ------------------------
  * private
  * ------------------------ */
 
-uint8_t cardKeyEEPROM::readByte(uint16_t addr)
+SBYT libEEPROM::readByte(DBYT addr)
 {
     return EEPROM.read(addr);
 }
 
-void cardKeyEEPROM::writeByte(uint16_t addr,
-                              uint8_t data)
+void libEEPROM::writeByte(DBYT addr,
+                          SBYT data)
 {
     EEPROM.write(addr, data);
 }
 
-void cardKeyEEPROM::readBlock(uint16_t block,
-                              uint8_t *data)
+DBYT libEEPROM::resBlockAddr(DBYT block)
 {
-    memcpy(data, rombuf + blockAddr(block), BLOCK_SIZE);
-}
-
-void cardKeyEEPROM::writeBlock(uint16_t block,
-                               uint8_t *data)
-{
-    uint8_t i = 0;
-    
-    while (i < BLOCK_SIZE) {
-        if (rombuf[i + blockAddr(block)] != data[i]) {
-            writeByte(blockAddr(block) + i , data[i]);
-        }
-        i++;
-    }
-    
-    memcpy(rombuf + blockAddr(block), data, BLOCK_SIZE);
-}
-
-void cardKeyEEPROM::incNoCard()
-{
-    writeByte(0, rombuf[0] + 1);
-    rombuf[0]++;
-}
-
-uint16_t cardKeyEEPROM::blockAddr(uint16_t block)
-{
-    return block * EEPROM_SIZE / BLOCK_SIZE;
+    return block * BLOCK_SIZE;
 }
