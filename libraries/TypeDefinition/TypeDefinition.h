@@ -19,11 +19,4 @@
 #define QINT    int32_t
 #define OINT    int64_t
 
-#define YES     0x01
-#define NO      0x00
-#define ON      0x01
-#define OFF     0x00
-#define OK      0x00
-#define NG      0x01
-
 #endif

@@ -5,9 +5,10 @@
  */
 
 #include <inttypes.h>
+#include "TypeDefinition.h"
 
-#ifndef libRCS620S_H_
-#define libRCS620S_H_
+#ifndef ____libRCS620S__
+#define ____libRCS620S__
 
 /* --------------------------------
  * Constant
@@ -27,41 +28,44 @@ public:
     //RCS620S();
     RCS620S(SoftwareSerial *softSerial = NULL);	
 
-    int initDevice(void);
-    int pollingFeliCa(uint16_t systemCode = 0xffff);
-    int pollingTypeA();
-    int cardCommand(const uint8_t* command,
-                    uint8_t commandLen,
-                    uint8_t response[RCS620S_MAX_CARD_RESPONSE_LEN],
-                    uint8_t* responseLen);
-    int cardDataExchange(const uint8_t* command,
-                         uint8_t commandLen,
-                         uint8_t response[RCS620S_MAX_CARD_RESPONSE_LEN]);
-    int rfOff(void);
-    int push(const uint8_t* data,
-             uint8_t dataLen);
+    SINT initDevice(void);
+    SINT pollingFeliCa(DBYT systemCode = 0xffff);
+    SINT pollingTypeA();
+    SINT cardCommand(const SBYT *command,
+                     SBYT commandLen,
+                     SBYT response[RCS620S_MAX_CARD_RESPONSE_LEN],
+                     SBYT *responseLen);
+    SINT cardDataExchange(const SBYT *command,
+                          SBYT commandLen,
+                          SBYT response[RCS620S_MAX_CARD_RESPONSE_LEN]);
+    SINT rfOff(void);
+    SINT push(const SBYT *data,
+              SBYT dataLen);
 
 private:
-    int rwCommand(const uint8_t* command,
-                  uint16_t commandLen,
-                  uint8_t response[RCS620S_MAX_RW_RESPONSE_LEN],
-                  uint16_t* responseLen);
+    SINT rwCommand(const SBYT *command,
+                   DBYT commandLen,
+                   SBYT response[RCS620S_MAX_RW_RESPONSE_LEN],
+                   DBYT *responseLen);
     void cancel(void);
-    uint8_t calcDCS(const uint8_t* data,
-                    uint16_t len);
-    void writeSerial(const uint8_t* data,
-                     uint16_t len);
-    int readSerial(uint8_t* data,
-                   uint16_t len);
+    SBYT calcDCS(const SBYT *data,
+                 DBYT len);
+    void writeSerial(const SBYT *data,
+                     DBYT len);
+    SINT readSerial(SBYT *data,
+                    DBYT len);
     void flushSerial(void);
-    int checkTimeout(unsigned long t0);
+    QBYT usec();
+    void delaym(QBYT time);
+    void delayu(QBYT time);
+    SINT checkTimeout(QBYT t0);
 
 public:
-    unsigned long timeout;
-    uint8_t idm[8];
-    uint8_t pmm[8];
-    uint8_t nfcid[10];
-    uint8_t nfcidlen;
+    QBYT timeout;
+    SBYT idm[8];
+    SBYT pmm[8];
+    SBYT nfcid[10];
+    SBYT nfcidlen;
     
 private:
     SoftwareSerial *serialPort;

@@ -15,7 +15,7 @@ void setup() {
 
 void loop() {
   SBYT buf[32], test[32];
-  SINT ret, i, len, addr;
+  SBYT ret, i, len, addr;
   buf[0] = 0xF1;
   buf[1] = 0x82;
   
@@ -23,9 +23,10 @@ void loop() {
   test[1] = 0xF1;
   test[2] = 0x82;
   
-  //stp.sendPacket(0x01, 0xFF, test, 3);
+  stp.sendPacket(0xFF, test, 3);
   
-//  ret = stp.recvPacket(&addr, buf, &len);
+  ret = stp.recvPacket(&addr, buf, &len);
+  lcd.print(ret, HEX);
   
   if (ret == 0) {
     lcd.clear();

@@ -126,7 +126,6 @@ SBYT STP::recvPacket(SBYT *fromaddr,
         *fromaddr = buf[1];
         *len = buf[2];
         memcpy(data, buf + 4, buf[2] - 4);
-        
         return 0;
     }
     

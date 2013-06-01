@@ -8,10 +8,8 @@
 #include <string.h>
 #include <inttypes.h>
 #include "Arduino.h"
-#include "Print.h"
 #include "HardwareSerial.h"
 #include "SoftwareSerial.h"
-
 #include "libRCS620S.h"
 
 /* --------------------------------
@@ -47,14 +45,14 @@ RCS620S::RCS620S(SoftwareSerial *softSerial)
     this->timeout = RCS620S_DEFAULT_TIMEOUT;
 }
 
-int RCS620S::initDevice(void)
+SINT RCS620S::initDevice(void)
 {
-    int ret;
-    uint8_t response[RCS620S_MAX_RW_RESPONSE_LEN];
-    uint16_t responseLen;
+    SINT ret;
+    SBYT response[RCS620S_MAX_RW_RESPONSE_LEN];
+    DBYT responseLen;
 
     /* RFConfiguration (various timings) */
-    ret = rwCommand((const uint8_t*)"\xd4\x32\x02\x00\x00\x00", 6,
+    ret = rwCommand((const SBYT *)"\xd4\x32\x02\x00\x00\x00", 6,
                     response, &responseLen);
     if (!ret || (responseLen != 2) ||
         (memcmp(response, "\xd5\x33", 2) != 0)) {
@@ -62,7 +60,7 @@ int RCS620S::initDevice(void)
     }
 
     /* RFConfiguration (max retries) */
-    ret = rwCommand((const uint8_t*)"\xd4\x32\x05\x00\x00\x00", 6,
+    ret = rwCommand((const SBYT *)"\xd4\x32\x05\x00\x00\x00", 6,
                     response, &responseLen);
     if (!ret || (responseLen != 2) ||
         (memcmp(response, "\xd5\x33", 2) != 0)) {
@@ -70,7 +68,7 @@ int RCS620S::initDevice(void)
     }
 
     /* RFConfiguration (additional wait time = 24ms) */
-    ret = rwCommand((const uint8_t*)"\xd4\x32\x81\xff", 4,
+    ret = rwCommand((const SBYT *)"\xd4\x32\x81\xff", 4,
                     response, &responseLen);
     if (!ret || (responseLen != 2) ||
         (memcmp(response, "\xd5\x33", 2) != 0)) {
@@ -80,12 +78,12 @@ int RCS620S::initDevice(void)
     return 1;
 }
 
-int RCS620S::pollingFeliCa(uint16_t systemCode)
+SINT RCS620S::pollingFeliCa(DBYT systemCode)
 {
-    int ret;
-    uint8_t buf[9];
-    uint8_t response[RCS620S_MAX_RW_RESPONSE_LEN];
-    uint16_t responseLen;
+    SINT ret;
+    SBYT buf[9];
+    SBYT response[RCS620S_MAX_RW_RESPONSE_LEN];
+    DBYT responseLen;
     
     /* InListPassiveTarget */
     memcpy(buf, "\xd4\x4a\x01\x01\x00\xff\xff\x00\x00", 9);
@@ -104,12 +102,12 @@ int RCS620S::pollingFeliCa(uint16_t systemCode)
     return 1;
 }
 
-int RCS620S::pollingTypeA()
+SINT RCS620S::pollingTypeA()
 {
-    int ret;
-    uint8_t buf[4];
-    uint8_t response[RCS620S_MAX_RW_RESPONSE_LEN];
-    uint16_t responseLen;
+    SINT ret;
+    SBYT buf[4];
+    SBYT response[RCS620S_MAX_RW_RESPONSE_LEN];
+    DBYT responseLen;
 
     /* InListPassiveTarget */
     memcpy(buf, "\xd4\x4a\x01\x00", 4);
@@ -125,28 +123,28 @@ int RCS620S::pollingTypeA()
     return 1;
 }
 
-int RCS620S::cardCommand(const uint8_t* command,
-                         uint8_t commandLen,
-                         uint8_t response[RCS620S_MAX_CARD_RESPONSE_LEN],
-                         uint8_t* responseLen)
+SINT RCS620S::cardCommand(const SBYT *command,
+                          SBYT commandLen,
+                          SBYT response[RCS620S_MAX_CARD_RESPONSE_LEN],
+                          SBYT *responseLen)
 {
-    int ret;
-    uint16_t commandTimeout;
-    uint8_t buf[RCS620S_MAX_RW_RESPONSE_LEN];
-    uint16_t len;
+    SINT ret;
+    DBYT commandTimeout;
+    SBYT buf[RCS620S_MAX_RW_RESPONSE_LEN];
+    DBYT len;
     
     if (this->timeout >= (0x10000 / 2)) {
         commandTimeout = 0xffff;
     } else {
-        commandTimeout = (uint16_t)(this->timeout * 2);
+        commandTimeout = (DBYT)(this->timeout * 2);
     }
     
     /* CommunicateThruEX */
     buf[0] = 0xd4;
     buf[1] = 0xa0;
-    buf[2] = (uint8_t)((commandTimeout >> 0) & 0xff);
-    buf[3] = (uint8_t)((commandTimeout >> 8) & 0xff);
-    buf[4] = (uint8_t)(commandLen + 1);
+    buf[2] = (SBYT)((commandTimeout >> 0) & 0xff);
+    buf[3] = (SBYT)((commandTimeout >> 8) & 0xff);
+    buf[4] = (SBYT)(commandLen + 1);
     memcpy(buf + 5, command, commandLen);
     
     ret = rwCommand(buf, 5 + commandLen, buf, &len);
@@ -156,20 +154,20 @@ int RCS620S::cardCommand(const uint8_t* command,
         return 0;
     }
     
-    *responseLen = (uint8_t)(buf[3] - 1);
+    *responseLen = (SBYT)(buf[3] - 1);
     memcpy(response, buf + 4, *responseLen);
     
     return 1;
 }
 
-int RCS620S::cardDataExchange(const uint8_t* command,
-                              uint8_t commandLen,
-                              uint8_t response[RCS620S_MAX_CARD_RESPONSE_LEN])
+SINT RCS620S::cardDataExchange(const SBYT *command,
+                               SBYT commandLen,
+                               SBYT response[RCS620S_MAX_CARD_RESPONSE_LEN])
 {
-    int ret;
-    uint16_t commandTimeout;
-    uint8_t buf[RCS620S_MAX_RW_RESPONSE_LEN];
-    uint16_t len;
+    SINT ret;
+    DBYT commandTimeout;
+    SBYT buf[RCS620S_MAX_RW_RESPONSE_LEN];
+    DBYT len;
     
     /* cardDataExchange */
     buf[0] = 0xd4;
@@ -188,14 +186,14 @@ int RCS620S::cardDataExchange(const uint8_t* command,
     return 1;
 }
 
-int RCS620S::rfOff(void)
+SINT RCS620S::rfOff(void)
 {
-    int ret;
-    uint8_t response[RCS620S_MAX_RW_RESPONSE_LEN];
-    uint16_t responseLen;
+    SINT ret;
+    SBYT response[RCS620S_MAX_RW_RESPONSE_LEN];
+    DBYT responseLen;
 
     /* RFConfiguration (RF field) */
-    ret = rwCommand((const uint8_t*)"\xd4\x32\x01\x00", 4,
+    ret = rwCommand((const SBYT *)"\xd4\x32\x01\x00", 4,
                     response, &responseLen);
     if (!ret || (responseLen != 2) ||
         (memcmp(response, "\xd5\x33", 2) != 0)) {
@@ -205,12 +203,12 @@ int RCS620S::rfOff(void)
     return 1;
 }
 
-int RCS620S::push(const uint8_t* data,
-                  uint8_t dataLen)
+SINT RCS620S::push(const SBYT *data,
+                   SBYT dataLen)
 {
-    int ret;
-    uint8_t buf[RCS620S_MAX_CARD_RESPONSE_LEN];
-    uint8_t responseLen;
+    SINT ret;
+    SBYT buf[RCS620S_MAX_CARD_RESPONSE_LEN];
+    SBYT responseLen;
 
     if (dataLen > 224) {
         return 0;
@@ -238,7 +236,7 @@ int RCS620S::push(const uint8_t* data,
         return 0;
     }
 
-    delay(1000);
+    delaym(1000);
 
     return 1;
 }
@@ -247,17 +245,17 @@ int RCS620S::push(const uint8_t* data,
  * private
  * ------------------------ */
 
-int RCS620S::rwCommand(const uint8_t* command,
-                       uint16_t commandLen,
-                       uint8_t response[RCS620S_MAX_RW_RESPONSE_LEN],
-                       uint16_t* responseLen)
+SINT RCS620S::rwCommand(const SBYT *command,
+                        DBYT commandLen,
+                        SBYT response[RCS620S_MAX_RW_RESPONSE_LEN],
+                        DBYT *responseLen)
 {
-    int ret;
-    uint8_t buf[9];
+    SINT ret;
+    SBYT buf[9];
 
     flushSerial();
 
-    uint8_t dcs = calcDCS(command, commandLen);
+    SBYT dcs = calcDCS(command, commandLen);
 
     /* transmit the command */
     buf[0] = 0x00;
@@ -266,15 +264,15 @@ int RCS620S::rwCommand(const uint8_t* command,
     if (commandLen <= 255) {
         /* normal frame */
         buf[3] = commandLen;
-        buf[4] = (uint8_t)-buf[3];
+        buf[4] = (SBYT)-buf[3];
         writeSerial(buf, 5);
     } else {
         /* extended frame */
         buf[3] = 0xff;
         buf[4] = 0xff;
-        buf[5] = (uint8_t)((commandLen >> 8) & 0xff);
-        buf[6] = (uint8_t)((commandLen >> 0) & 0xff);
-        buf[7] = (uint8_t)-(buf[5] + buf[6]);
+        buf[5] = (SBYT)((commandLen >> 8) & 0xff);
+        buf[6] = (SBYT)((commandLen >> 0) & 0xff);
+        buf[7] = (SBYT)-(buf[5] + buf[6]);
         writeSerial(buf, 8);
     }
     writeSerial(command, commandLen);
@@ -302,8 +300,8 @@ int RCS620S::rwCommand(const uint8_t* command,
         if (!ret || (((buf[5] + buf[6] + buf[7]) & 0xff) != 0)) {
             return 0;
         }
-        *responseLen = (((uint16_t)buf[5] << 8) |
-                        ((uint16_t)buf[6] << 0));
+        *responseLen = (((DBYT)buf[5] << 8) |
+                        ((DBYT)buf[6] << 0));
     } else {
         if (((buf[3] + buf[4]) & 0xff) != 0) {
             return 0;
@@ -334,39 +332,38 @@ int RCS620S::rwCommand(const uint8_t* command,
 void RCS620S::cancel(void)
 {
     /* transmit an ACK */
-    writeSerial((const uint8_t*)"\x00\x00\xff\x00\xff\x00", 6);
-    delay(1);
+    writeSerial((const SBYT *)"\x00\x00\xff\x00\xff\x00", 6);
+    delaym(1);
     flushSerial();
 }
 
-uint8_t RCS620S::calcDCS(const uint8_t* data,
-                         uint16_t len)
+SBYT RCS620S::calcDCS(const SBYT *data,
+                      DBYT len)
 {
-    uint8_t sum = 0;
+    SBYT sum = 0;
 
-    for (uint16_t i = 0; i < len; i++) {
+    for (DBYT i = 0; i < len; i++) {
         sum += data[i];
     }
 
-    return (uint8_t)-(sum & 0xff);
+    return (SBYT)-(sum & 0xff);
 }
 
-void RCS620S::writeSerial(const uint8_t* data,
-                          uint16_t len)
+void RCS620S::writeSerial(const SBYT *data,
+                          DBYT len)
 {
     if (serialPort) {
         serialPort->write(data, len);
-        //Serial.write(data, len);
     } else {
         Serial.write(data, len);
     }
 }
 
-int RCS620S::readSerial(uint8_t* data,
-                        uint16_t len)
+SINT RCS620S::readSerial(SBYT *data,
+                        DBYT len)
 {
-    uint16_t nread = 0;
-    unsigned long t0 = millis();
+    DBYT nread = 0;
+    QBYT t0 = usec();
 
     while (nread < len) {
         if (checkTimeout(t0)) {
@@ -376,7 +373,6 @@ int RCS620S::readSerial(uint8_t* data,
         if (serialPort)	{
 			if (serialPort->available() > 0) {
 				data[nread] = serialPort->read();
-                //Serial.write(data + nread, 1);
 				nread++;
 			}
 		} else {
@@ -399,9 +395,21 @@ void RCS620S::flushSerial(void)
 	}
 }
 
-int RCS620S::checkTimeout(unsigned long t0)
+QBYT RCS620S::usec() {
+    return micros();
+}
+
+void RCS620S::delaym(QBYT time) {
+    delay(time);
+}
+
+void RCS620S::delayu(QBYT time) {
+    delayMicroseconds(time);
+}
+
+SINT RCS620S::checkTimeout(QBYT t0)
 {
-    unsigned long t = millis();
+    QBYT t = usec();
 
     if ((t - t0) >= this->timeout) {
         return 1;
