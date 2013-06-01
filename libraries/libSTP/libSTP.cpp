@@ -26,6 +26,7 @@ STP::STP(DBYT rate,
     this->bitrate = rate;
     this->delaytime = (1000000 / (this->bitrate / 8)) * 1.2;
     this->timeout = this->delaytime * (PACKET_MAX_LEN) * 2;
+    this->myaddr = addr;
 }
 
 STP::STP(SoftwareSerial *softSerial,
@@ -36,6 +37,7 @@ STP::STP(SoftwareSerial *softSerial,
     this->bitrate = rate;
     this->delaytime = (1000000 / (this->bitrate / 8)) * 1.2;
     this->timeout = this->delaytime * (PACKET_MAX_LEN) * 2;
+    this->myaddr = addr;
 }
 
 SBYT STP::sendPacket(SBYT sendaddr,
@@ -93,7 +95,7 @@ SBYT STP::recvPacket(SBYT *fromaddr,
             flushSerial();
             return 1;
         }
-        
+
         if (availableSerial() > 0) {
             buf[i] = readSerial();
             i++;

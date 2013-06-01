@@ -5,6 +5,7 @@
  */
 
 #include <inttypes.h>
+#include <SoftwareSerial.h>
 #include "TypeDefinition.h"
 
 #ifndef ____libRCS620S__
@@ -21,7 +22,6 @@
  * Class Declaration
  * -------------------------------- */
 
-class SoftwareSerial;
 class RCS620S
 {
 public:
@@ -55,6 +55,7 @@ private:
     SINT readSerial(SBYT *data,
                     DBYT len);
     void flushSerial(void);
+    QBYT msec();
     QBYT usec();
     void delaym(QBYT time);
     void delayu(QBYT time);

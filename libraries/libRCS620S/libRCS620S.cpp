@@ -52,26 +52,20 @@ SINT RCS620S::initDevice(void)
     DBYT responseLen;
 
     /* RFConfiguration (various timings) */
-    ret = rwCommand((const SBYT *)"\xd4\x32\x02\x00\x00\x00", 6,
-                    response, &responseLen);
-    if (!ret || (responseLen != 2) ||
-        (memcmp(response, "\xd5\x33", 2) != 0)) {
+    ret = rwCommand((const SBYT *)"\xd4\x32\x02\x00\x00\x00", 6, response, &responseLen);
+    if (!ret || (responseLen != 2) || (memcmp(response, "\xd5\x33", 2) != 0)) {
         return 0;
     }
 
     /* RFConfiguration (max retries) */
-    ret = rwCommand((const SBYT *)"\xd4\x32\x05\x00\x00\x00", 6,
-                    response, &responseLen);
-    if (!ret || (responseLen != 2) ||
-        (memcmp(response, "\xd5\x33", 2) != 0)) {
+    ret = rwCommand((const SBYT *)"\xd4\x32\x05\x00\x00\x00", 6, response, &responseLen);
+    if (!ret || (responseLen != 2) || (memcmp(response, "\xd5\x33", 2) != 0)) {
         return 0;
     }
 
     /* RFConfiguration (additional wait time = 24ms) */
-    ret = rwCommand((const SBYT *)"\xd4\x32\x81\xff", 4,
-                    response, &responseLen);
-    if (!ret || (responseLen != 2) ||
-        (memcmp(response, "\xd5\x33", 2) != 0)) {
+    ret = rwCommand((const SBYT *)"\xd4\x32\x81\xff", 4, response, &responseLen);
+    if (!ret || (responseLen != 2) || (memcmp(response, "\xd5\x33", 2) != 0)) {
         return 0;
     }
 
@@ -113,8 +107,7 @@ SINT RCS620S::pollingTypeA()
     memcpy(buf, "\xd4\x4a\x01\x00", 4);
 
     ret = rwCommand(buf, 4, response, &responseLen);
-    if (!ret ||
-        (memcmp(response, "\xd5\x4b\x01\x01", 4) != 0)) {
+    if (!ret || (memcmp(response, "\xd5\x4b\x01\x01", 4) != 0)) {
         return 0;
     }
     nfcidlen = response[7];
@@ -148,9 +141,7 @@ SINT RCS620S::cardCommand(const SBYT *command,
     memcpy(buf + 5, command, commandLen);
     
     ret = rwCommand(buf, 5 + commandLen, buf, &len);
-    if (!ret || (len < 4) ||
-        (memcmp(buf, "\xd5\xa1\x00", 3) != 0) ||
-        (len != (3 + buf[3]))) {
+    if (!ret || (len < 4) || (memcmp(buf, "\xd5\xa1\x00", 3) != 0) || (len != (3 + buf[3]))) {
         return 0;
     }
     
@@ -176,8 +167,7 @@ SINT RCS620S::cardDataExchange(const SBYT *command,
     memcpy(buf + 3, command, commandLen);
     
     ret = rwCommand(buf, 3 + commandLen, buf, &len);
-    if (!ret ||
-        (memcmp(buf, "\xd5\x41\x00", 3) != 0)) {
+    if (!ret || (memcmp(buf, "\xd5\x41\x00", 3) != 0)) {
         return 0;
     }
 
@@ -195,8 +185,7 @@ SINT RCS620S::rfOff(void)
     /* RFConfiguration (RF field) */
     ret = rwCommand((const SBYT *)"\xd4\x32\x01\x00", 4,
                     response, &responseLen);
-    if (!ret || (responseLen != 2) ||
-        (memcmp(response, "\xd5\x33", 2) != 0)) {
+    if (!ret || (responseLen != 2) || (memcmp(response, "\xd5\x33", 2) != 0)) {
         return 0;
     }
 
@@ -221,8 +210,7 @@ SINT RCS620S::push(const SBYT *data,
     memcpy(buf + 10, data, dataLen);
 
     ret = cardCommand(buf, 10 + dataLen, buf, &responseLen);
-    if (!ret || (responseLen != 10) || (buf[0] != 0xb1) ||
-        (memcmp(buf + 1, this->idm, 8) != 0) || (buf[9] != dataLen)) {
+    if (!ret || (responseLen != 10) || (buf[0] != 0xb1) || (memcmp(buf + 1, this->idm, 8) != 0) || (buf[9] != dataLen)) {
         return 0;
     }
 
@@ -231,8 +219,7 @@ SINT RCS620S::push(const SBYT *data,
     buf[9] = 0x00;
 
     ret = cardCommand(buf, 10, buf, &responseLen);
-    if (!ret || (responseLen != 10) || (buf[0] != 0xa5) ||
-        (memcmp(buf + 1, this->idm, 8) != 0) || (buf[9] != 0x00)) {
+    if (!ret || (responseLen != 10) || (buf[0] != 0xa5) || (memcmp(buf + 1, this->idm, 8) != 0) || (buf[9] != 0x00)) {
         return 0;
     }
 
@@ -300,8 +287,7 @@ SINT RCS620S::rwCommand(const SBYT *command,
         if (!ret || (((buf[5] + buf[6] + buf[7]) & 0xff) != 0)) {
             return 0;
         }
-        *responseLen = (((DBYT)buf[5] << 8) |
-                        ((DBYT)buf[6] << 0));
+        *responseLen = (((DBYT)buf[5] << 8) | ((DBYT)buf[6] << 0));
     } else {
         if (((buf[3] + buf[4]) & 0xff) != 0) {
             return 0;
@@ -360,10 +346,10 @@ void RCS620S::writeSerial(const SBYT *data,
 }
 
 SINT RCS620S::readSerial(SBYT *data,
-                        DBYT len)
+                         DBYT len)
 {
     DBYT nread = 0;
-    QBYT t0 = usec();
+    QBYT t0 = msec();
 
     while (nread < len) {
         if (checkTimeout(t0)) {
@@ -395,6 +381,10 @@ void RCS620S::flushSerial(void)
 	}
 }
 
+QBYT RCS620S::msec() {
+    return millis();
+}
+
 QBYT RCS620S::usec() {
     return micros();
 }
@@ -409,7 +399,7 @@ void RCS620S::delayu(QBYT time) {
 
 SINT RCS620S::checkTimeout(QBYT t0)
 {
-    QBYT t = usec();
+    QBYT t = msec();
 
     if ((t - t0) >= this->timeout) {
         return 1;

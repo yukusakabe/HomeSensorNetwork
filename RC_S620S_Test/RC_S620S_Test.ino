@@ -1,4 +1,5 @@
 #include <SoftwareSerial.h>
+#include <TypeDefinition.h>
 #include <LiquidCrystal.h>
 #include <libRCS620S.h>
  

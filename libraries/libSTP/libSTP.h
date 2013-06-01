@@ -6,6 +6,7 @@
 //
 //
 #include <inttypes.h>
+#include <SoftwareSerial.h>
 #include "TypeDefinition.h"
 
 #ifndef ____libSTP__
@@ -16,7 +17,6 @@
 #define HEDDER_LEN              4       //
 #define CRC_8_CCITT             0x8D    //CRC-8-CCITT
 
-class SoftwareSerial;
 class STP
 {
 public:
