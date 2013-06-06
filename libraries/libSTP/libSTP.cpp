@@ -40,7 +40,7 @@ STP::STP(SoftwareSerial *softSerial,
     this->myaddr = addr;
 }
 
-SBYT STP::sendPacket(SBYT sendaddr,
+SINT STP::sendPacket(SBYT sendaddr,
                      SBYT *data,
                      SBYT len)
 {
@@ -77,7 +77,7 @@ SBYT STP::sendPacket(SBYT sendaddr,
     return 0;
 }
 
-SBYT STP::recvPacket(SBYT *fromaddr,
+SINT STP::recvPacket(SBYT *fromaddr,
                      SBYT *data,
                      SBYT *len)
 {
@@ -204,7 +204,7 @@ void STP::delayu(QBYT time) {
     delayMicroseconds(time);
 }
 
-SBYT STP::checkTimeout(QBYT t0,
+SINT STP::checkTimeout(QBYT t0,
                        QBYT timeout)
 {
     QBYT t = usec();

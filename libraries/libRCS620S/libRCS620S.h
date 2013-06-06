@@ -4,12 +4,12 @@
  * Copyright 2010 Sony Corporation
  */
 
+#ifndef ____libRCS620S__
+#define ____libRCS620S__
+
 #include <inttypes.h>
 #include <SoftwareSerial.h>
 #include "TypeDefinition.h"
-
-#ifndef ____libRCS620S__
-#define ____libRCS620S__
 
 /* --------------------------------
  * Constant

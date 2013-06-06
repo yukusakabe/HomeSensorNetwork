@@ -5,12 +5,13 @@
 //  Created by Yu Kusakabe on 2013/05/22.
 //
 //
-#include <inttypes.h>
-#include <SoftwareSerial.h>
-#include "TypeDefinition.h"
 
 #ifndef ____libSTP__
 #define ____libSTP__
+
+#include <inttypes.h>
+#include "SoftwareSerial.h"
+#include "TypeDefinition.h"
 
 #define BROADCAST_ADDR          0xFF    //Broadcast Address
 #define PACKET_MAX_LEN          32      //
@@ -25,10 +26,10 @@ public:
     STP(SoftwareSerial *softSerial,
         DBYT rate,
         DBYT addr);
-    SBYT sendPacket(SBYT sendaddr,
+    SINT sendPacket(SBYT sendaddr,
                     SBYT *data,
                     SBYT len);
-    SBYT recvPacket(SBYT *fromaddr,
+    SINT recvPacket(SBYT *fromaddr,
                     SBYT *data,
                     SBYT *len);
     SBYT calcCRC8(SBYT *data,
@@ -41,7 +42,7 @@ private:
     void flushSerial();
     QBYT usec();
     void delayu(QBYT time);
-    SBYT checkTimeout(QBYT t0,
+    SINT checkTimeout(QBYT t0,
                       QBYT timeout);
 
 public:

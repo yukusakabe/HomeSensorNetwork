@@ -5,11 +5,12 @@
 //  Created by Yu Kusakabe on 2013/05/23.
 //
 //
-#include <inttypes.h>
-#include "TypeDefinition.h"
 
 #ifndef ____libEEPROM__
 #define ____libEEPROM__
+
+#include <inttypes.h>
+#include "TypeDefinition.h"
 
 #define BLOCK_SIZE  32
 
