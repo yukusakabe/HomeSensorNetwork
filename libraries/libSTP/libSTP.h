@@ -34,12 +34,12 @@ public:
                     SBYT *len);
     SBYT calcCRC8(SBYT *data,
                   DBYT length);
+    void flushSerial();
 private:
     void writeSerial(SBYT *data,
                      DBYT len);
     SBYT readSerial();
     SBYT availableSerial();
-    void flushSerial();
     QBYT usec();
     void delayu(QBYT time);
     SINT checkTimeout(QBYT t0,

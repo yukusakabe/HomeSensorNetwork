@@ -39,7 +39,7 @@ void KeyManager::execComm()
     if (ret == 0 && len >= 3 && buf[0] == 0xFA && buf[1] == 0xA1) {
         switch (buf[2]) {
             case 0x11:
-                openKey(((DBYT)buf[3] << 4) + (DBYT)buf[4]);
+                openKey(((DBYT)buf[3] << 8) + (DBYT)buf[4]);
                 break;
                 
             case 0x21:
@@ -70,9 +70,16 @@ void KeyManager::autoClose()
 {
     readState();
     
-    if (this->closeTime != 0) {
-        if (checkTime(this->setTimeC, this->closeTime) && doorstate == LOW) {
-            closeKey();
+    if (checkTime(this->setTimeI, 3000)) {
+        if (this->lockstate == LOW) {
+            closeTime = 0;
+            
+        }
+        
+        if (this->closeTime != 0) {
+            if (checkTime(this->setTimeC, this->closeTime) && doorstate == LOW) {
+                closeKey();
+            }
         }
     }
 }
@@ -84,7 +91,7 @@ SBYT KeyManager::openKey(DBYT time)
     if (lockstate == LOW) {
         if (checkTime(this->setTimeI, INTERVAL)) {
             digitalWrite(keypin, HIGH);
-            delay(10);
+            delay(300);
             digitalWrite(keypin, LOW);
         
             this->closeTime = time * 1000;
@@ -105,7 +112,7 @@ SBYT KeyManager::closeKey()
     if (lockstate == HIGH && doorstate == LOW) {
         if (checkTime(setTimeI, INTERVAL)) {
             digitalWrite(keypin, HIGH);
-            delay(10);
+            delay(300);
             digitalWrite(keypin, LOW);
             
             this->closeTime = 0;

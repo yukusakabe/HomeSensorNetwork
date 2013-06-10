@@ -28,22 +28,22 @@ public:
     //RCS620S();
     RCS620S(SoftwareSerial *softSerial = NULL);	
 
-    SINT initDevice(void);
-    SINT pollingFeliCa(DBYT systemCode = 0xffff);
-    SINT pollingTypeA();
-    SINT cardCommand(const SBYT *command,
+    SBYT initDevice(void);
+    SBYT pollingFeliCa(DBYT systemCode = 0xffff);
+    SBYT pollingTypeA();
+    SBYT cardCommand(const SBYT *command,
                      SBYT commandLen,
                      SBYT response[RCS620S_MAX_CARD_RESPONSE_LEN],
                      SBYT *responseLen);
-    SINT cardDataExchange(const SBYT *command,
+    SBYT cardDataExchange(const SBYT *command,
                           SBYT commandLen,
                           SBYT response[RCS620S_MAX_CARD_RESPONSE_LEN]);
-    SINT rfOff(void);
-    SINT push(const SBYT *data,
+    SBYT rfOff(void);
+    SBYT push(const SBYT *data,
               SBYT dataLen);
 
 private:
-    SINT rwCommand(const SBYT *command,
+    SBYT rwCommand(const SBYT *command,
                    DBYT commandLen,
                    SBYT response[RCS620S_MAX_RW_RESPONSE_LEN],
                    DBYT *responseLen);
@@ -52,14 +52,14 @@ private:
                  DBYT len);
     void writeSerial(const SBYT *data,
                      DBYT len);
-    SINT readSerial(SBYT *data,
+    SBYT readSerial(SBYT *data,
                     DBYT len);
     void flushSerial(void);
     QBYT msec();
     QBYT usec();
     void delaym(QBYT time);
     void delayu(QBYT time);
-    SINT checkTimeout(QBYT t0);
+    SBYT checkTimeout(QBYT t0);
 
 public:
     QBYT timeout;

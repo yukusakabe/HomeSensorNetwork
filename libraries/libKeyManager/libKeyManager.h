@@ -9,7 +9,7 @@
 #ifndef ____libKeyManager__
 #define ____libKeyManager__
 
-#define INTERVAL    1000
+#define INTERVAL    2000
 
 #include <inttypes.h>
 #include "TypeDefinition.h"

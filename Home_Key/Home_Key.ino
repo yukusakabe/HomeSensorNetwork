@@ -1,31 +1,30 @@
 #include <EEPROM.h>
-#include <LiquidCrystal.h>
 #include <SoftwareSerial.h>
+#include <TypeDefinition.h>
 #include <libRCS620S.h>
-#include <libEEPROM.h>
+#include <cardkeyEEPROM.h>
+#include <libSTP.h>
  
 #define COMMAND_TIMEOUT 400
 #define POLLING_INTERVAL 1000
 #define LED_PIN 13
-#define SWITCH_PIN 8
-#define SETUP_PIN 9
-#define DELETE_PIN 10
-#define KEY_STATE_PIN 6
+#define SETUP_PIN 11
+#define DELETE_PIN 12
 
-#define LED_CLOSE_PIN 2
-#define LED_OPEN_PIN 3
-#define OPEN_BUTTON_PIN 4
-#define CLOSE_BUTTON_PIN 5
+#define RED_PIN  6
+#define GRN_PIN  7
+#define SWT_PIN  8
 
-//LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 RCS620S rcs620s(NULL);
 cardKeyEEPROM cardkey;
+SoftwareSerial SoftSerial(2, 3);
+STP stp(&SoftSerial, 19200, 3);
 
 
 void cardSetup() {
   int ret, i = 0;
-  uint8_t response[RCS620S_MAX_CARD_RESPONSE_LEN], responselen;
-  uint8_t scode[4], buf[6];
+  SBYT response[RCS620S_MAX_CARD_RESPONSE_LEN], responselen;
+  SBYT scode[4], buf[6];
  
 //  lcd.clear();
 //  lcd.print("Card Setup...");
@@ -42,7 +41,7 @@ void cardSetup() {
       buf[4] = random(0, 255);
       buf[5] = random(0, 255);
       
-      rcs620s.cardDataExchange(buf, 6, response, &responselen);
+      rcs620s.cardDataExchange(buf, 6, response);
       
       cardkey.saveID(rcs620s.nfcid, rcs620s.nfcidlen, buf + 2);
       
@@ -65,22 +64,20 @@ void setup() {
   pinMode(LED_PIN, OUTPUT);   // for Polling Status
   digitalWrite(LED_PIN, LOW); 
   
-  pinMode(SWITCH_PIN, OUTPUT);
-  digitalWrite(SWITCH_PIN, LOW); 
-  
   pinMode(SETUP_PIN, INPUT_PULLUP);
   pinMode(DELETE_PIN, INPUT_PULLUP);
-  pinMode(KEY_STATE_PIN, INPUT_PULLUP);
-  pinMode(LED_OPEN_PIN, OUTPUT);
-  pinMode(LED_CLOSE_PIN, OUTPUT);
-  pinMode(OPEN_BUTTON_PIN, INPUT_PULLUP);
-  pinMode(CLOSE_BUTTON_PIN, INPUT_PULLUP);
+  //pinMode(4, OUTPUT);
+  pinMode(RED_PIN, OUTPUT);
+  pinMode(GRN_PIN, OUTPUT);
+  pinMode(SWT_PIN, INPUT_PULLUP);
   
-  digitalWrite(LED_OPEN_PIN, LOW); 
-  digitalWrite(LED_CLOSE_PIN, LOW); 
+  //digitalWrite(4, LOW);
+  digitalWrite(RED_PIN, LOW);
+  digitalWrite(GRN_PIN, LOW);
  
   Serial.begin(115200);      // for RC-S620/S
-//  lcd.begin(16, 2);           // for LCD
+  SoftSerial.begin(19200);
+  SoftSerial.print("TESTTEST");
  
   // initialize RC-S620/S
   ret = rcs620s.initDevice();
@@ -89,32 +86,33 @@ void setup() {
  
 void loop() {
   int ret, i;
-  uint8_t response[RCS620S_MAX_CARD_RESPONSE_LEN], responselen;
-  uint8_t scode[4], buf[6];
-  
-  uint8_t s = 0;
+  SBYT response[RCS620S_MAX_CARD_RESPONSE_LEN], responselen;
+  SBYT scode[4], buf[6];
+  SBYT buff[28], addr, len;
+  SBYT s = 0;
  
   // Polling
   digitalWrite(LED_PIN, HIGH);
   rcs620s.timeout = COMMAND_TIMEOUT;
-//  lcd.clear();
   
   if (digitalRead(SETUP_PIN) == LOW) {
     cardSetup();
-//    lcd.clear();
   }
   
   if (digitalRead(DELETE_PIN) == LOW) {
-//    lcd.print("Resetting...");
     cardkey.initcardKeyEEPROM();    
     delay(1000);
-//    lcd.clear();
   }
   
   ret = rcs620s.pollingTypeA();
+  
+
+  /*if (SoftSerial.available()) {
+      SoftSerial.write(stp.recvPacket(&addr, buf, &len));
+  }*/
  
   if (ret) {
-    rcs620s.cardDataExchange((const uint8_t*)"\x30\x06", 2, response, &responselen);
+    rcs620s.cardDataExchange((const SBYT*)"\x30\x06", 2, response);
     
     ret = cardkey.loadID(rcs620s.nfcid, rcs620s.nfcidlen, scode);
       
@@ -127,69 +125,52 @@ void loop() {
           buf[4] = random(0, 255);
           buf[5] = random(0, 255);
           
-          rcs620s.cardDataExchange(buf, 6, response, &responselen);
+          rcs620s.cardDataExchange(buf, 6, response);
           
           cardkey.saveID(rcs620s.nfcid, rcs620s.nfcidlen, buf + 2);
           
-          if (digitalRead(KEY_STATE_PIN) == LOW) {
-            digitalWrite(LED_CLOSE_PIN, HIGH);
-//            lcd.print("OPEN");
-            
-            while (s < 20) {
-              if (digitalRead(OPEN_BUTTON_PIN) == LOW) {
-                digitalWrite(SWITCH_PIN, HIGH);
-                delay(1000);
-                digitalWrite(SWITCH_PIN, LOW);
-                delay(2000);
-                
-                s = 20;
-              }
-              delay(250);
-              s++;
+          stp.sendPacket(0x01, (SBYT *)"\xFA\xA1\x31", 3);
+          stp.flushSerial();
+          
+          i = 1000;
+          while (i >= 0) {
+            ret = stp.recvPacket(&addr, buf, &len);
+           
+            if (ret == 0) {
+              stp.sendPacket(0x01, (SBYT *)"\xFA\xA1\x31", 3);
+              break;
             }
-            
-            digitalWrite(LED_CLOSE_PIN, LOW);
-          } else {
-            digitalWrite(LED_OPEN_PIN, HIGH);
-//            lcd.print("CLOSE");
-            
-            while (s < 20) {
-              if (digitalRead(CLOSE_BUTTON_PIN) == LOW) {
-                digitalWrite(SWITCH_PIN, HIGH);
-                delay(1000);
-                digitalWrite(SWITCH_PIN, LOW);
-                delay(2000);
+            i--;
+            delay(10);
+          }
+          
+          if (ret == 0) {
+            switch (buf[2]) {
+              case 0x00:
+                digitalWrite(GRN_PIN, HIGH);
+                i = 100;
+                while (i >= 0) {
+                  if (digitalRead(SWT_PIN) == LOW) {
+                    stp.sendPacket(0x01, (SBYT *)"\xFA\xA1\x11", 3);
+                    break;
+                  } 
+                  delay(50);
+                  i--;
+                }
+                digitalWrite(GRN_PIN, LOW);
                 
-                s = 20;
-              }
+                break;
               
-              delay(250);
-              s++;
+              case 0x10:
+                digitalWrite(RED_PIN, HIGH);
+                stp.sendPacket(0x01, (SBYT *)"\xFA\xA1\x21", 3);
+                delay(3000);
+                digitalWrite(RED_PIN, LOW);
+                break;
             }
-            
-            digitalWrite(LED_OPEN_PIN, LOW);
-          }
-          
-          
-          if (digitalRead(KEY_STATE_PIN) == LOW) {
-            digitalWrite(LED_CLOSE_PIN, HIGH);
-            delay(2000);
-            digitalWrite(LED_CLOSE_PIN, LOW);
-          } else {
-            digitalWrite(LED_OPEN_PIN, HIGH);
-            delay(2000);
-            digitalWrite(LED_OPEN_PIN, LOW);
-          }
-        } else {
-//          lcd.print("NG");
-          delay(3000);
+          } 
         }
-    } else {
-//      lcd.print("NG");
-      delay(3000);
     }
-  } else {
-//    lcd.print("Polling...");
   }
  
   rcs620s.rfOff();

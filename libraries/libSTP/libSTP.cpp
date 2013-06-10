@@ -72,7 +72,11 @@ SINT STP::sendPacket(SBYT sendaddr,
         }
     }
     
+    digitalWrite(4, HIGH);
+    delay(10);
     writeSerial(buf, len + 4);
+    delay(10);
+    digitalWrite(4, LOW);
     
     return 0;
 }

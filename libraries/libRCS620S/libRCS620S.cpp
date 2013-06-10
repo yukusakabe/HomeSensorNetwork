@@ -45,9 +45,9 @@ RCS620S::RCS620S(SoftwareSerial *softSerial)
     this->timeout = RCS620S_DEFAULT_TIMEOUT;
 }
 
-SINT RCS620S::initDevice(void)
+SBYT RCS620S::initDevice(void)
 {
-    SINT ret;
+    SBYT ret;
     SBYT response[RCS620S_MAX_RW_RESPONSE_LEN];
     DBYT responseLen;
 
@@ -72,9 +72,9 @@ SINT RCS620S::initDevice(void)
     return 1;
 }
 
-SINT RCS620S::pollingFeliCa(DBYT systemCode)
+SBYT RCS620S::pollingFeliCa(DBYT systemCode)
 {
-    SINT ret;
+    SBYT ret;
     SBYT buf[9];
     SBYT response[RCS620S_MAX_RW_RESPONSE_LEN];
     DBYT responseLen;
@@ -96,9 +96,9 @@ SINT RCS620S::pollingFeliCa(DBYT systemCode)
     return 1;
 }
 
-SINT RCS620S::pollingTypeA()
+SBYT RCS620S::pollingTypeA()
 {
-    SINT ret;
+    SBYT ret;
     SBYT buf[4];
     SBYT response[RCS620S_MAX_RW_RESPONSE_LEN];
     DBYT responseLen;
@@ -116,12 +116,12 @@ SINT RCS620S::pollingTypeA()
     return 1;
 }
 
-SINT RCS620S::cardCommand(const SBYT *command,
+SBYT RCS620S::cardCommand(const SBYT *command,
                           SBYT commandLen,
                           SBYT response[RCS620S_MAX_CARD_RESPONSE_LEN],
                           SBYT *responseLen)
 {
-    SINT ret;
+    SBYT ret;
     DBYT commandTimeout;
     SBYT buf[RCS620S_MAX_RW_RESPONSE_LEN];
     DBYT len;
@@ -151,11 +151,11 @@ SINT RCS620S::cardCommand(const SBYT *command,
     return 1;
 }
 
-SINT RCS620S::cardDataExchange(const SBYT *command,
+SBYT RCS620S::cardDataExchange(const SBYT *command,
                                SBYT commandLen,
                                SBYT response[RCS620S_MAX_CARD_RESPONSE_LEN])
 {
-    SINT ret;
+    SBYT ret;
     DBYT commandTimeout;
     SBYT buf[RCS620S_MAX_RW_RESPONSE_LEN];
     DBYT len;
@@ -176,9 +176,9 @@ SINT RCS620S::cardDataExchange(const SBYT *command,
     return 1;
 }
 
-SINT RCS620S::rfOff(void)
+SBYT RCS620S::rfOff(void)
 {
-    SINT ret;
+    SBYT ret;
     SBYT response[RCS620S_MAX_RW_RESPONSE_LEN];
     DBYT responseLen;
 
@@ -192,10 +192,10 @@ SINT RCS620S::rfOff(void)
     return 1;
 }
 
-SINT RCS620S::push(const SBYT *data,
+SBYT RCS620S::push(const SBYT *data,
                    SBYT dataLen)
 {
-    SINT ret;
+    SBYT ret;
     SBYT buf[RCS620S_MAX_CARD_RESPONSE_LEN];
     SBYT responseLen;
 
@@ -232,12 +232,12 @@ SINT RCS620S::push(const SBYT *data,
  * private
  * ------------------------ */
 
-SINT RCS620S::rwCommand(const SBYT *command,
+SBYT RCS620S::rwCommand(const SBYT *command,
                         DBYT commandLen,
                         SBYT response[RCS620S_MAX_RW_RESPONSE_LEN],
                         DBYT *responseLen)
 {
-    SINT ret;
+    SBYT ret;
     SBYT buf[9];
 
     flushSerial();
@@ -345,7 +345,7 @@ void RCS620S::writeSerial(const SBYT *data,
     }
 }
 
-SINT RCS620S::readSerial(SBYT *data,
+SBYT RCS620S::readSerial(SBYT *data,
                          DBYT len)
 {
     DBYT nread = 0;
@@ -397,7 +397,7 @@ void RCS620S::delayu(QBYT time) {
     delayMicroseconds(time);
 }
 
-SINT RCS620S::checkTimeout(QBYT t0)
+SBYT RCS620S::checkTimeout(QBYT t0)
 {
     QBYT t = msec();
 
